@@ -18,6 +18,9 @@
                 key-field="Id"
                 data={accounts}
                 columns={columns}
+                sorted-by={sortedBy}
+                sorted-direction={sortedDirection}
+                onsort={handleSort}
             ></lightning-datatable>
         </template>
     </lightning-card>

@@ -8,13 +8,13 @@ export default class AccountsList extends LightningElement {
     @track loading = false;
 
     limitSize = 10;
-
+// sortable :makes columns clickable for sorting
     columns = [
-        { label: 'Name', fieldName: 'Name', type: 'text' },
-        { label: 'Industry', fieldName: 'Industry', type: 'text' },
-        { label: 'Type', fieldName: 'Type', type: 'text' },
-        { label: 'Phone', fieldName: 'Phone', type: 'phone' },
-        { label: 'Website', fieldName: 'Website', type: 'url' }
+        { label: 'Name', fieldName: 'Name', type: 'text', sortable: true },
+        { label: 'Industry', fieldName: 'Industry', type: 'text', sortable: true },
+        { label: 'Type', fieldName: 'Type', type: 'text', sortable: true },
+        { label: 'Phone', fieldName: 'Phone', type: 'phone', sortable: true },
+        { label: 'Website', fieldName: 'Website', type: 'url', sortable: true }
     ];
 // lifecycle hook called when component is inserted into the DOM, used here to load initial data
     connectedCallback() {
@@ -35,4 +35,26 @@ export default class AccountsList extends LightningElement {
             this.loading = false;
         }
     }
+
+    handleSort(event) {
+        // retrieve the field name and sort direction from the event
+        const { fieldName: sortedBy, sortDirection } = event.detail;
+        this.sortedBy = sortedBy;
+        this.sortedDirection = sortDirection;
+
+         // Copy the data
+        let sortedData = [...this.accounts];
+        
+        // Sort the data
+        sortedData.sort((a, b) => {{
+            let valA = a[sortedBy] ? a[sortedBy].toString().toLowerCase() : '';
+            let valB = b[sortedBy] ? b[sortedBy].toString().toLowerCase() : '';
+            if (valA === valB) return 0;
+            return sortDirection === 'asc'
+                ? (valA > valB ? 1 : -1)
+                : (valA < valB ? 1 : -1);
+        }});
+         this.accounts = sortedData;
+    }
+
 }
