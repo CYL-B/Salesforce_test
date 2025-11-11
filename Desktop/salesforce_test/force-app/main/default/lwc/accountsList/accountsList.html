@@ -1,8 +1,5 @@
 <template>
-    <lightning-card title="Accounts">
-        <div class="slds-p-horizontal_small slds-p-vertical_x-small">
-            <lightning-input type="number" label="Number of records" value={limitSize} min="1" onchange={handleLimitChange}></lightning-input>
-        </div>
+    <lightning-card title="Accounts List">
 
         <template if:true={loading}>
             <div class="slds-p-around_medium">
@@ -21,7 +18,6 @@
                 key-field="Id"
                 data={accounts}
                 columns={columns}
-                hide-checkbox-column
             ></lightning-datatable>
         </template>
     </lightning-card>
