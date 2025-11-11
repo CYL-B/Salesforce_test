@@ -7,14 +7,23 @@ export default class AccountsList extends LightningElement {
     @track error;
     @track loading = false;
 
-    limitSize = 10;
-// sortable :makes columns clickable for sorting
+
+    // pagination properties
+    currentPage = 1;
+    totalPages = 1;
+    limitSize = 50;
+    pageSize = 5;
+
+    //sorting properties
+    sortedDirection = 'asc';
+    sortedBy;
+
+// sortable : makes columns clickable for sorting
     columns = [
         { label: 'Name', fieldName: 'Name', type: 'text', sortable: true },
         { label: 'Industry', fieldName: 'Industry', type: 'text', sortable: true },
         { label: 'Type', fieldName: 'Type', type: 'text', sortable: true },
-        { label: 'Phone', fieldName: 'Phone', type: 'phone', sortable: true },
-        { label: 'Website', fieldName: 'Website', type: 'url', sortable: true }
+        { label: 'Phone', fieldName: 'Phone', type: 'phone', sortable: true }
     ];
 // lifecycle hook called when component is inserted into the DOM, used here to load initial data
     connectedCallback() {
@@ -28,6 +37,8 @@ export default class AccountsList extends LightningElement {
             this.accounts = (data || []).map(account => ({
                 ...account 
             }));
+            this.totalPages = Math.ceil(this.accounts.length / this.pageSize);
+            this.updateVisibleAccounts();
         } catch (e) {
             this.error = e?.body?.message || e?.message || 'An unknown error occurred';
             this.accounts = undefined;
@@ -36,8 +47,47 @@ export default class AccountsList extends LightningElement {
         }
     }
 
+    updateVisibleAccounts() {
+        const start = (this.currentPage - 1) * this.pageSize;
+        const end = start + this.pageSize;
+        this.visibleAccounts= this.accounts.slice(start, end);
+    }
+
+    // ----- Pagination -----
+    get isFirstPage() {
+        return this.currentPage === 1;
+    }
+
+    get isLastPage() {
+        return this.currentPage === this.totalPages;
+    }
+
+    goToNext() {
+        if (!this.isLastPage) {
+            this.currentPage++;
+            this.updateVisibleAccounts();
+        }
+    }
+
+    goToPrevious() {
+        if (!this.isFirstPage) {
+            this.currentPage--;
+            this.updateVisibleAccounts();
+        }
+    }
+
+    goToFirst() {
+        this.currentPage = 1;
+        this.updateVisibleAccounts();
+    }
+
+    goToLast() {
+        this.currentPage = this.totalPages;
+        this.updateVisibleAccounts();
+    }
+
     handleSort(event) {
-        // retrieve the field name and sort direction from the event
+        // retrieve the field name and sort direction (asc/desc) from the event
         const { fieldName: sortedBy, sortDirection } = event.detail;
         this.sortedBy = sortedBy;
         this.sortedDirection = sortDirection;

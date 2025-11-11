@@ -14,14 +14,24 @@
         </template>
 
         <template if:true={accounts}>
-            <lightning-datatable
-                key-field="Id"
-                data={accounts}
-                columns={columns}
-                sorted-by={sortedBy}
-                sorted-direction={sortedDirection}
-                onsort={handleSort}
-            ></lightning-datatable>
+            <lightning-datatable 
+            key-field="Id" 
+            data={accounts} 
+            columns={columns} 
+            sorted-by={sortedBy}
+            sorted-direction={sortedDirection} 
+            onsort={handleSort}>
+            </lightning-datatable>
         </template>
+        <!-- Pagination controls -->
+        <div class="slds-m-around_medium slds-align_absolute-center">
+            <lightning-button label="First" onclick={goToFirst} disabled={isFirstPage}></lightning-button>
+            <lightning-button label="Previous" onclick={goToPrevious} disabled={isFirstPage}></lightning-button>
+            <span class="slds-m-horizontal_small">
+                Page {currentPage} of {totalPages}
+            </span>
+            <lightning-button label="Next" onclick={goToNext} disabled={isLastPage}></lightning-button>
+            <lightning-button label="Last" onclick={goToLast} disabled={isLastPage}></lightning-button>
+        </div>
     </lightning-card>
 </template>
