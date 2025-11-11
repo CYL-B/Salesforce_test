@@ -4,6 +4,8 @@ import getAccounts from '@salesforce/apex/AccountsListController.getAccounts';
 export default class AccountsList extends LightningElement {
     // following properties are reactive, so UI updates automatically when they change
     @track accounts;
+    @track visibleAccounts =[];
+
     @track error;
     @track loading = false;
 
@@ -37,7 +39,7 @@ export default class AccountsList extends LightningElement {
             this.accounts = (data || []).map(account => ({
                 ...account 
             }));
-            this.totalPages = Math.ceil(this.accounts.length / this.pageSize);
+            this.totalPages =  Math.max(1, Math.ceil(this.accounts.length / this.pageSize));
             this.updateVisibleAccounts();
         } catch (e) {
             this.error = e?.body?.message || e?.message || 'An unknown error occurred';

@@ -13,10 +13,10 @@
             </div>
         </template>
 
-        <template if:true={accounts}>
+        <template if:true={visibleAccounts}>
             <lightning-datatable 
             key-field="Id" 
-            data={accounts} 
+            data={visibleAccounts} 
             columns={columns} 
             sorted-by={sortedBy}
             sorted-direction={sortedDirection} 
