@@ -1,6 +1,7 @@
 <template>
     <lightning-card title="Accounts List">
-
+        <lightning-button-icon icon-name="utility:delete" alternative-text="Delete" title="Delete"
+            onclick={handleDelete} class="slds-m-left_small slds-m-top_small slds-align_end"></lightning-button-icon>
         <template if:true={loading}>
             <div class="slds-p-around_medium">
                 <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
@@ -20,7 +21,8 @@
             columns={columns} 
             sorted-by={sortedBy}
             sorted-direction={sortedDirection} 
-            onsort={handleSort}>
+            onsort={handleSort} 
+            onrowselection={handleRowSelection}>
             </lightning-datatable>
         </template>
         <!-- Pagination controls -->

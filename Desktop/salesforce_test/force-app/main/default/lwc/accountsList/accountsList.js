@@ -1,10 +1,14 @@
 import { LightningElement, track } from 'lwc';
 import getAccounts from '@salesforce/apex/AccountsListController.getAccounts';
+import deleteAccounts from '@salesforce/apex/AccountsListController.deleteAccounts';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+
 
 export default class AccountsList extends LightningElement {
     // following properties are reactive, so UI updates automatically when they change
     @track accounts;
     @track visibleAccounts =[];
+    @track selectedRows = [];
 
     @track error;
     @track loading = false;
@@ -16,7 +20,9 @@ export default class AccountsList extends LightningElement {
     limitSize = 50;
     pageSize = 5;
 
-    //sorting properties
+    //sorting properties :
+    //  sortedDirection = 'asc' or 'desc'
+    // sortedBy = field name currently sorted
     sortedDirection = 'asc';
     sortedBy;
 
@@ -109,4 +115,33 @@ export default class AccountsList extends LightningElement {
          this.accounts = sortedData;
     }
 
+   // Track checkbox selections
+    handleRowSelection(event) {
+        this.selectedRows = event.detail.selectedRows;
+    }
+async handleDelete() {
+        if (this.selectedRows.length === 0) {
+            this.showToast('No records selected', 'Please select at least one record.', 'warning');
+            return;
+        }
+
+        const idsToDelete = this.selectedRows.map(row => row.Id);
+
+        this.loading = true;
+        try {
+            await deleteAccounts({ accountIds: idsToDelete });
+            this.showToast('Deleted!', 'Selected records have been deleted.', 'success');
+            this.selectedRows = [];
+            await this.loadData();
+        } catch (e) {
+            console.error('Error deleting accounts:', JSON.stringify(e));
+            this.showToast('Error', e?.body?.message || e?.message || 'Delete failed.', 'error');
+        } finally {
+            this.loading = false;
+        }
+    }
+
+    showToast(title, message, variant) {
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
+    }
 }

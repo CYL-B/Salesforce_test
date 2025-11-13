@@ -28,4 +28,13 @@ public with sharing class AccountsListController {
             throw new AuraHandledException('Failed to load Accounts: ' + e.getMessage());
         }
     }
+
+    @AuraEnabled
+    public static void deleteAccounts(List<Id> accountIds) {
+        try {
+            delete [SELECT Id FROM Account WHERE Id IN :accountIds];
+        } catch (Exception e) {
+            throw new AuraHandledException('Delete failed: ' + e.getMessage());
+        }
+    }
 }
