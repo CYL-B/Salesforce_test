@@ -1,13 +1,14 @@
 import { LightningElement, track } from 'lwc';
 import getAccounts from '@salesforce/apex/AccountsListController.getAccounts';
 import deleteAccounts from '@salesforce/apex/AccountsListController.deleteAccounts';
+import getAccountsCount from '@salesforce/apex/AccountsListController.getAccountsCount';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 
 export default class AccountsList extends LightningElement {
     // following properties are reactive, so UI updates automatically when they change
-    @track accounts;
-    @track visibleAccounts =[];
+    @track accounts = [];
+    // @track visibleAccounts = [];
     @track selectedRows = [];
 
     @track error;
@@ -17,7 +18,7 @@ export default class AccountsList extends LightningElement {
     // pagination properties
     currentPage = 1;
     totalPages = 1;
-    limitSize = 50;
+    totalRecords=0;    
     pageSize = 5;
 
     //sorting properties :
@@ -26,14 +27,14 @@ export default class AccountsList extends LightningElement {
     sortedDirection = 'asc';
     sortedBy;
 
-// sortable : makes columns clickable for sorting
+    // sortable : makes columns clickable for sorting
     columns = [
         { label: 'Name', fieldName: 'Name', type: 'text', sortable: true },
         { label: 'Industry', fieldName: 'Industry', type: 'text', sortable: true },
         { label: 'Type', fieldName: 'Type', type: 'text', sortable: true },
         { label: 'Phone', fieldName: 'Phone', type: 'phone', sortable: true }
     ];
-// lifecycle hook called when component is inserted into the DOM, used here to load initial data
+    // lifecycle hook called when component is inserted into the DOM, used here to load initial data
     connectedCallback() {
         this.loadData();
     }
@@ -41,12 +42,19 @@ export default class AccountsList extends LightningElement {
         this.loading = true;
         this.error = undefined;
         try {
-            const data = await getAccounts({ limitSize: this.limitSize });
-            this.accounts = (data || []).map(account => ({
-                ...account 
-            }));
-            this.totalPages =  Math.max(1, Math.ceil(this.accounts.length / this.pageSize));
-            this.updateVisibleAccounts();
+            this.totalRecords = await getAccountsCount();
+            this.totalPages = Math.ceil(this.totalRecords / this.pageSize);
+
+            this.accounts = await getAccounts({ pageNumber: this.currentPage,
+                pageSize: this.pageSize,
+                sortBy: this.sortedBy,
+                sortDirection: this.sortedDirection });
+            // this.accounts = (data || []).map(account => ({
+            //     ...account
+            // }));
+            console.log('Loaded accounts:', JSON.stringify(this.accounts));
+            // this.totalPages = Math.max(1, Math.ceil(this.accounts.length / this.pageSize));
+            // this.updateVisibleAccounts();
         } catch (e) {
             this.error = e?.body?.message || e?.message || 'An unknown error occurred';
             this.accounts = undefined;
@@ -55,11 +63,11 @@ export default class AccountsList extends LightningElement {
         }
     }
 
-    updateVisibleAccounts() {
-        const start = (this.currentPage - 1) * this.pageSize;
-        const end = start + this.pageSize;
-        this.visibleAccounts= this.accounts.slice(start, end);
-    }
+    // updateVisibleAccounts() {
+    //     const start = (this.currentPage - 1) * this.pageSize;
+    //     const end = start + this.pageSize;
+    //     this.visibleAccounts = this.accounts.slice(start, end);
+    // }
 
     // ----- Pagination -----
     get isFirstPage() {
@@ -70,56 +78,64 @@ export default class AccountsList extends LightningElement {
         return this.currentPage === this.totalPages;
     }
 
-    goToNext() {
+    async goToNext() {
         if (!this.isLastPage) {
             this.currentPage++;
-            this.updateVisibleAccounts();
+            // this.updateVisibleAccounts();
+            await this.loadData();
         }
     }
 
-    goToPrevious() {
+    async goToPrevious() {
         if (!this.isFirstPage) {
             this.currentPage--;
-            this.updateVisibleAccounts();
+            // this.updateVisibleAccounts();
+            await this.loadData();
         }
     }
 
-    goToFirst() {
+    async goToFirst() {
         this.currentPage = 1;
-        this.updateVisibleAccounts();
+        // this.updateVisibleAccounts();
+        await this.loadData();
     }
 
-    goToLast() {
+    async goToLast() {
         this.currentPage = this.totalPages;
-        this.updateVisibleAccounts();
+        // this.updateVisibleAccounts();
+        await this.loadData();
     }
 
-    handleSort(event) {
+    async handleSort(event) {
         // retrieve the field name and sort direction (asc/desc) from the event
         const { fieldName: sortedBy, sortDirection } = event.detail;
         this.sortedBy = sortedBy;
         this.sortedDirection = sortDirection;
+        this.currentPage = 1;
 
-         // Copy the data
-        let sortedData = [...this.accounts];
-        
+        // Copy the data
+        // let sortedData = [...this.accounts];
+
         // Sort the data
-        sortedData.sort((a, b) => {{
-            let valA = a[sortedBy] ? a[sortedBy].toString().toLowerCase() : '';
-            let valB = b[sortedBy] ? b[sortedBy].toString().toLowerCase() : '';
-            if (valA === valB) return 0;
-            return sortDirection === 'asc'
-                ? (valA > valB ? 1 : -1)
-                : (valA < valB ? 1 : -1);
-        }});
-         this.accounts = sortedData;
+        // sortedData.sort((a, b) => {
+        //     {
+        //         let valA = a[sortedBy] ? a[sortedBy].toString().toLowerCase() : '';
+        //         let valB = b[sortedBy] ? b[sortedBy].toString().toLowerCase() : '';
+        //         if (valA === valB) return 0;
+        //         return sortDirection === 'asc'
+        //             ? (valA > valB ? 1 : -1)
+        //             : (valA < valB ? 1 : -1);
+        //     }
+        // });
+        // this.accounts = sortedData;
+        await this.loadData();
     }
 
-   // Track checkbox selections
+    // Track checkbox selections
     handleRowSelection(event) {
         this.selectedRows = event.detail.selectedRows;
     }
-async handleDelete() {
+    async handleDelete() {
         if (this.selectedRows.length === 0) {
             this.showToast('No records selected', 'Please select at least one record.', 'warning');
             return;
